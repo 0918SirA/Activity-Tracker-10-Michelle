@@ -1,0 +1,656 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Activity Tracker</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #e0f7e0; /* Soft green background */
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        h2 {
+            text-align: center;
+            color: #333;
+        }
+        #tracker-container {
+            width: 100%; /* Make the container 100% wide */
+            max-width: 800px; /* Set a max-width to keep it clean and responsive */
+            background-color: #fff;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+            margin: 0 auto; /* Center the container */
+        }
+        #login-section {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        input[type="text"] {
+            width: 80%;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            outline: none;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        table {
+            width: 100%; /* Ensure the table spans the full width of the container */
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        th, td {
+            padding: 12px;
+            text-align: left;
+            white-space: nowrap; /* Prevent text from wrapping */
+        }
+        th {
+            background-color: #4CAF50;
+            color: white;
+        }
+        td {
+            background-color: #f9f9f9;
+        }
+        .score {
+            text-align: center;
+        }
+        .low-score {
+            color: red;
+        }
+        .medium-score {
+            color: green;
+        }
+        .high-score {
+            color: blue;
+        }
+        #activity-table {
+            display: none;
+        }
+        #student-name {
+            text-align: center;
+            font-size: 1.2em;
+            color: #333;
+            margin-bottom: 10px;
+            display: none;
+        }
+        /* Mobile responsive design */
+        @media (max-width: 600px) {
+            input[type="text"] {
+                width: 100%;
+            }
+            table {
+                display: block;
+                overflow-x: auto; /* Allow horizontal scrolling for smaller screens */
+            }
+            th, td {
+                white-space: nowrap; /* Ensure content remains on one line */
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="tracker-container">
+        <h2>Student Activity Tracker</h2>
+
+        <!-- Login form for students to enter personal code -->
+        <div id="login-section">
+            <input type="text" id="code" placeholder="Enter your code">
+            <button onclick="login()">Login</button>
+        </div>
+
+        <!-- Display student's name after login -->
+        <div id="student-name"></div>
+
+        <!-- Table for displaying activity tracker -->
+        <table id="activity-table">
+            <thead>
+                <tr>
+                    <th>Activity Title (MELC)</th>
+                    <th class="score">Score</th>
+                    <th class="score">Max Score</th>
+                    <th>Status</th>
+                    <th>Date Submitted</th> <!-- Date Submitted column -->
+                    <th>Due Date</th> <!-- New Due Date column -->
+                </tr>
+            </thead>
+            <tbody id="activity-body">
+                <!-- Rows will be dynamically inserted here -->
+            </tbody>
+        </table>
+
+        <!-- Summary box for total scores and percentage -->
+        <div id="score-summary" style="display: none; text-align: center; margin-top: 20px; padding: 10px; border: 1px solid #ccc; border-radius: 5px; background-color: #f9f9f9;">
+            <p><strong>Total Raw Score:</strong> <span id="total-raw-score">0</span></p>
+            <p><strong>Total Highest Possible Score:</strong> <span id="total-highest-score">0</span></p>
+            <p><strong>Percentage:</strong> <span id="total-percentage">0%</span></p>
+        </div>
+    </div>
+
+    <script>
+        // Sample student data (In real scenarios, this data would come from a database or server)
+        const studentData = {
+            "JB6884": {
+                name: "Jr-Ed L. Bartolome",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RB5842": {
+                name: "Renz Paul C. Borsolo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 31, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "VB8407": {
+                name: "VJ M. Bugarin",
+                activities: [
+                    { title: "Graphing Polynomials", score: 31, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "DC1272": {
+                name: "Dennis Den R. Cabanding",
+                activities: [
+                    { title: "Graphing Polynomials", score: 30, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JD3983": {
+                name: "John Michael Daileg",
+                activities: [
+                    { title: "Graphing Polynomials", score: 22, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JG3897": {
+                name: "John Carlo C. Gaspar",
+                activities: [
+                    { title: "Graphing Polynomials", score: 23, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "NL5025": {
+                name: "Nathan Ivan M. Lacambra",
+                activities: [
+                    { title: "Graphing Polynomials", score: 13, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JL8758": {
+                name: "Justine S. Lastra",
+                activities: [
+                    { title: "Graphing Polynomials", score: 27, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JL4648": {
+                name: "John Carlo S. Laxamana",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JL3711": {
+                name: "John Lucero",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "LM2188": {
+                name: "Landel Mabanglo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KM2881": {
+                name: "Kurt John  L. Mendoza",
+                activities: [
+                    { title: "Graphing Polynomials", score: 26, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JM8149": {
+                name: "John Vincent R. Molina",
+                activities: [
+                    { title: "Graphing Polynomials", score: 27, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JO3957": {
+                name: "Jan Reign J. Obrero",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JO1182": {
+                name: "Jirex Olfindo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 23, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "DO1230": {
+                name: "Dustine F. Ortaleza",
+                activities: [
+                    { title: "Graphing Polynomials", score: 30, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JP4327": {
+                name: "Jomar Pioquinto",
+                activities: [
+                    { title: "Graphing Polynomials", score: 30, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KR3076": {
+                name: "Kim Reyes",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AR0794": {
+                name: "Aaron A. Rosario",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "AS7179": {
+                name: "Angelo P. Sarmiento",
+                activities: [
+                    { title: "Graphing Polynomials", score: 17, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JV7636": {
+                name: "Janeni Vaughn B. Vitto",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "MY8833": {
+                name: "Marc J. Yebes",
+                activities: [
+                    { title: "Graphing Polynomials", score: 35, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "MA5049": {
+                name: "Maricar J. Angeles",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "CA1242": {
+                name: "Carly Jazz C. Aquino",
+                activities: [
+                    { title: "Graphing Polynomials", score: 34, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RA1394": {
+                name: "Rianne Venice V. Asuncion",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AA5955": {
+                name: "Aizen Yunah A. Anguilla",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "LA8035": {
+                name: "Lhiane Austria",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "MB1167": {
+                name: "Moira Lyka S. Bacordo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 28, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "CB2164": {
+                name: "Cheska Joy M. Balmores",
+                activities: [
+                    { title: "Graphing Polynomials", score: 21, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KB0801": {
+                name: "Kathleen Joy C. Barongo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JB1760": {
+                name: "Jicelle Mae C. Barrientos",
+                activities: [
+                    { title: "Graphing Polynomials", score: 24, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AB7567": {
+                name: "Anifah Basher",
+                activities: [
+                    { title: "Graphing Polynomials", score: 26, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "TC0732": {
+                name: "Tiffany Gail V. Caguioa",
+                activities: [
+                    { title: "Graphing Polynomials", score: 32, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KC4514": {
+                name: "Kate Ashley R. Capinuyan",
+                activities: [
+                    { title: "Graphing Polynomials", score: 18, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RC3439": {
+                name: "Rhianne Capiz",
+                activities: [
+                    { title: "Graphing Polynomials", score: 30, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "GC2421": {
+                name: "Gherley Shayne G. Cavite",
+                activities: [
+                    { title: "Graphing Polynomials", score: 26, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AC3440": {
+                name: "Angel Mae A. Conchada",
+                activities: [
+                    { title: "Graphing Polynomials", score: 26, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KC0897": {
+                name: "Kristel A. Crisologo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 34, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "HC3114": {
+                name: "Hermaionee T. Culala",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "LD8720": {
+                name: "Liannah Mae S. Datu",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "JD1497": {
+                name: "Jireh M. David",
+                activities: [
+                    { title: "Graphing Polynomials", score: 32, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AE3739": {
+                name: "Angel Joy V. Esguerra",
+                activities: [
+                    { title: "Graphing Polynomials", score: 35, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "BF5285": {
+                name: "Bea Bianca S. Fabiala",
+                activities: [
+                    { title: "Graphing Polynomials", score: 24, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AF6804": {
+                name: "Ashlie Marie N. Fabiala",
+                activities: [
+                    { title: "Graphing Polynomials", score: 33, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AG2046": {
+                name: "Angelique L. Garsin",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JG1708": {
+                name: "Jovanah R. Gaspar",
+                activities: [
+                    { title: "Graphing Polynomials", score: 27, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "SG9187": {
+                name: "Sophia G. Grande",
+                activities: [
+                    { title: "Graphing Polynomials", score: 34, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JH7227": {
+                name: "Jerice C. Husi",
+                activities: [
+                    { title: "Graphing Polynomials", score: 22, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AL7679": {
+                name: "Akiesha D. Lucas",
+                activities: [
+                    { title: "Graphing Polynomials", score: 20, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JM7978": {
+                name: "Jeyvely C. Macalino",
+                activities: [
+                    { title: "Graphing Polynomials", score: 27, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "SM7192": {
+                name: "Shella Macazo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 24, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "EM1077": {
+                name: "Erica F. Maniego",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RM1970": {
+                name: "Rianne Mendoza",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "VO5185": {
+                name: "Valerie F. Oguis",
+                activities: [
+                    { title: "Graphing Polynomials", score: 32, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "JP8197": {
+                name: "Julia Ann C. Pabuayon",
+                activities: [
+                    { title: "Graphing Polynomials", score: 34, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RP5588": {
+                name: "Rea Alexa Palafox",
+                activities: [
+                    { title: "Graphing Polynomials", score: 31, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AP7654": {
+                name: "Angela Mhae Pangilinan",
+                activities: [
+                    { title: "Graphing Polynomials", score: 21, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "BP6956": {
+                name: "Bea Alexa C. Portin",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "CP7194": {
+                name: "Claire Feliciti T. Puzon",
+                activities: [
+                    { title: "Graphing Polynomials", score: 25, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "AR5771": {
+                name: "Abigail C. Ramil",
+                activities: [
+                    { title: "Graphing Polynomials", score: 21, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "CR6706": {
+                name: "Cassandra D. Rosario",
+                activities: [
+                    { title: "Graphing Polynomials", score: 31, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "KS3623": {
+                name: "KC C. Sagabaen",
+                activities: [
+                    { title: "Graphing Polynomials", score: 16, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "RS1434": {
+                name: "Rica Joy M. Sotelo",
+                activities: [
+                    { title: "Graphing Polynomials", score: 31, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "FV1646": {
+                name: "Farrah Rihana Valle",
+                activities: [
+                    { title: "Graphing Polynomials", score: 32, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            },
+            "SV3386": {
+                name: "Sheena Mae T. Velasco",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "JV8158": {
+                name: "Jennymae C. Veloria",
+                activities: [
+                    { title: "Graphing Polynomials", score: 0, highest: 30, dateSubmitted: "", dueDate: "2024-10-16" }
+                ]
+            },
+            "RY1959": {
+                name: "Ronalyn S. Yasay",
+                activities: [
+                    { title: "Graphing Polynomials", score: 24, highest: 30, dateSubmitted: "2024-10-16", dueDate: "2024-10-16" }
+                ]
+            }
+        };
+
+        // Function to handle student login
+        function login() {
+            const code = document.getElementById("code").value;
+            const table = document.getElementById("activity-table");
+            const tbody = document.getElementById("activity-body");
+            const studentNameDiv = document.getElementById("student-name");
+            const scoreSummaryDiv = document.getElementById("score-summary");
+            
+            if (studentData[code]) {
+                tbody.innerHTML = ''; // Clear any existing rows
+
+                // Show table and student's name
+                table.style.display = 'table';
+                studentNameDiv.style.display = 'block';
+                studentNameDiv.innerText = "Welcome, " + studentData[code].name;
+
+                const activities = studentData[code].activities;
+                let totalRawScore = 0;
+                let totalHighestScore = 0;
+
+                activities.forEach(activity => {
+                    const row = document.createElement('tr');
+                    
+                    // Activity Title
+                    const titleCell = document.createElement('td');
+                    titleCell.innerText = activity.title;
+                    row.appendChild(titleCell);
+
+                    // Student's Score
+                    const scoreCell = document.createElement('td');
+                    let score = activity.score;
+
+                    // Check if score and dateSubmitted are both blank
+                    if (activity.score === "" && activity.dateSubmitted === "") {
+                        score = 0; // Set score to zero if no submission
+                    }
+
+                    scoreCell.innerText = score;
+                    const percentage = (score / activity.highest) * 100;
+                    if (percentage < 50) {
+                        scoreCell.classList.add('low-score');
+                    } else if (percentage >= 50 && percentage <= 69) {
+                        scoreCell.classList.add('medium-score');
+                    } else if (percentage > 69) {
+                        scoreCell.classList.add('high-score');
+                    }
+                    scoreCell.classList.add('score');
+                    row.appendChild(scoreCell);
+
+                    // Highest Possible Score
+                    const highestCell = document.createElement('td');
+                    highestCell.innerText = activity.highest;
+                    highestCell.classList.add('score');
+                    row.appendChild(highestCell);
+
+                    // Status with "Late Submission" or "No Submission"
+                    const statusCell = document.createElement('td');
+                    if (activity.dateSubmitted === "" && score === 0) {
+                        statusCell.innerText = "No Submission";
+                    } else if (new Date(activity.dateSubmitted) > new Date(activity.dueDate)) {
+                        statusCell.innerText = "Late Submission";
+                    } else {
+                        statusCell.innerText = "Submitted";
+                    }
+                    row.appendChild(statusCell);
+
+                    // Date Submitted
+                    const dateCell = document.createElement('td');
+                    dateCell.innerText = activity.dateSubmitted || 'N/A'; // Show 'N/A' if dateSubmitted is blank
+                    row.appendChild(dateCell);
+
+                    // Due Date
+                    const dueDateCell = document.createElement('td');
+                    dueDateCell.innerText = activity.dueDate;
+                    row.appendChild(dueDateCell);
+
+                    // Append the row to the table
+                    tbody.appendChild(row);
+
+                    // Accumulate total raw score and total highest possible score
+                    totalRawScore += score;
+                    totalHighestScore += activity.highest;
+                });
+
+                // Calculate percentage
+                const percentage = ((totalRawScore / totalHighestScore) * 100).toFixed(2);
+
+                // Update summary box
+                document.getElementById("total-raw-score").innerText = totalRawScore;
+                document.getElementById("total-highest-score").innerText = totalHighestScore;
+                document.getElementById("total-percentage").innerText = percentage + "%";
+
+                // Display the summary box
+                scoreSummaryDiv.style.display = 'block';
+            } else {
+                alert("Invalid Code. Please try again.");
+            }
+        }
+    </script>
+
+</body>
+</html>
